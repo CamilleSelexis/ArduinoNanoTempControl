@@ -39,7 +39,8 @@ float derror = 0;
 float ierror = 0;
 float interval = millis();
 bool heating_enable = true;
-float Kd = 0.3; //PID parameters to be tuned
+float Kp = 1.0;
+float Kd = 0.1; //PID parameters to be tuned
 float Ki = 0.01;
 float setpoint = 37.5;
 
@@ -112,7 +113,7 @@ void loop() {
   }
   // PID controller = Kp*e + Ki*integral(e) + Kd*de/dt
   // error > 0 when temp < setpoint
-  if(error + Kd*derror + Ki*ierror > 0 && !digitalRead(PIN_ENABLE)){
+  if(Kp*error + Kd*derror + Ki*ierror > 0 && !digitalRead(PIN_ENABLE)){
     digitalWrite(PIN_SSR,HIGH);
     Serial.println("SSR is active, door being heated");
   }
