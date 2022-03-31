@@ -29,18 +29,20 @@ Adafruit_MAX31865 thermo = Adafruit_MAX31865(9, 10, 11, 12);
 #define PIN_ENABLE 7 //Heating enabled when this pin is low
 #define PIN_SSR 8   //High when SSR is activated
 #define PIN_TEMP A5
-float aerror[5]; // 2 point should be enough
-float ainterval[5];
+float aerror[20]; // 2 point should be enough
+float ainterval[20];
 float temp = 0;
 float ratio = 0;
 int k = 0;
 float error = 0;
 float derror = 0;
 float ierror = 0;
+float time_tot = 1;
+float time_0[20];
 float interval = millis();
 bool heating_enable = true;
 float Kp = 1.0;
-float Kd = 0.1; //PID parameters to be tuned
+float Kd = 150.0; //PID parameters to be tuned
 float Ki = 0.01;
 float setpoint = 37.5;
 
@@ -59,15 +61,15 @@ void loop() {
 
   uint16_t rtd = thermo.readRTD();
   
-  Serial.print("RTD value: "); Serial.println(rtd);
+  //Serial.print("RTD value: "); Serial.println(rtd);
   ratio = rtd;
   temp = thermo.temperature(RNOMINAL,RREF);
   error = setpoint-temp;
   interval = millis()-interval;
   ratio /= 32768;
-  Serial.print("Ratio = "); Serial.println(ratio,8);
-  Serial.print("Resistance = "); Serial.println(RREF*ratio,8);
-  Serial.print("Temperature = "); Serial.println(thermo.temperature(RNOMINAL, RREF));
+  //Serial.print("Ratio = "); Serial.println(ratio,8);
+  //Serial.print("Resistance = "); Serial.println(RREF*ratio,8);
+  //Serial.print("Temperature = "); Serial.println(thermo.temperature(RNOMINAL, RREF));
 
   // Check and print any faults
   uint8_t fault = thermo.readFault();
@@ -93,31 +95,42 @@ void loop() {
     }
     thermo.clearFault();
   }
-  Serial.println();
+  //Serial.println();
 
   analogWrite(PIN_TEMP,int(ceil((temp-20)*255/30))); //Between 20 and 50 C
-  if(k<5){
-    aerror[k] = error;
-    ainterval[k] = interval;
+  if(k<20){
+    aerror[k] = error; //array_error °C
+    ainterval[k] = interval; //array_interval ms
+    //time_0[k] = time_0[k-1] + interval;
     k++;
   }
   else{
-    for(int i = 0; i<4;i++){
+    for(int i = 0; i<19;i++){
       aerror[i] = aerror[i+1];
       ainterval[i] = ainterval[i+1];
+      time_tot += ainterval[i];
+      time_0[i] = time_tot;
     }
-    aerror[4] = error;
-    ainterval[4] = interval;
-    derror = (aerror[4]-aerror[3])/interval;
-    ierror = (aerror[4]*ainterval[4]+aerror[3]*ainterval[3])/(ainterval[4]+ainterval[3]);
+    aerror[19] = error;
+    ainterval[19] = interval;
+    time_tot += interval;
+    time_0[19] = time_tot;
+    derror = (aerror[19]-aerror[10])/(time_0[19]-time_0[10])*1000;
+    ierror = (aerror[19]*ainterval[19]+aerror[18]*ainterval[18])/(ainterval[19]+ainterval[18]);
   }
   // PID controller = Kp*e + Ki*integral(e) + Kd*de/dt
   // error > 0 when temp < setpoint
-  if(Kp*error + Kd*derror + Ki*ierror > 0 && !digitalRead(PIN_ENABLE)){
+  //&& !digitalRead(PIN_ENABLE)
+  Serial.print("Setpoint : ");Serial.print(Kp*error + Kd*derror + Ki*ierror + temp);
+  Serial.print(" / Temperature : ");Serial.print(temp);
+  Serial.print(" / derror : ");Serial.print(Kd*derror);
+  Serial.print(" / error : ");Serial.print(error);
+  Serial.println();
+  if(Kp*error + Kd*derror + Ki*ierror > 0 ){
     digitalWrite(PIN_SSR,HIGH);
-    Serial.println("SSR is active, door being heated");
+    //Serial.println("SSR is active, door being heated");
   }
   else{digitalWrite(PIN_SSR,LOW);
   }
-  delay(50); //Wait 50 ms to be sure that the SSR was activated or deactivated
+  delay(20); //Wait 50 ms to be sure that the SSR was activated or deactivated
 }
