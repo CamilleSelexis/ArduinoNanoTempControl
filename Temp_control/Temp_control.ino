@@ -13,7 +13,7 @@
   Written by Limor Fried/Ladyada for Adafruit Industries.  
   BSD license, all text above must be included in any redistribution
  ****************************************************/
-
+// TODO add control pin to enable/disable the heating
 #include <Adafruit_MAX31865.h>
 
 // Use software SPI: CS, DI, DO, CLK
@@ -27,7 +27,7 @@ Adafruit_MAX31865 thermo = Adafruit_MAX31865(9, 10, 11, 12);
 // 100.0 for PT100, 1000.0 for PT1000
 #define RNOMINAL  1000.0
 #define PIN_ENABLE 7 //Heating enabled when this pin is low
-#define PIN_SSR 8   //High when SSR is activated
+#define PIN_SSR 5   //High when SSR is activated
 #define PIN_TEMP A5
 float aerror[20]; // 2 point should be enough
 float ainterval[20];
