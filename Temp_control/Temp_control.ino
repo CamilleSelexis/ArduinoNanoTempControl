@@ -26,7 +26,7 @@ Adafruit_MAX31865 thermo = Adafruit_MAX31865(9, 10, 11, 12);
 // The 'nominal' 0-degrees-C resistance of the sensor
 // 100.0 for PT100, 1000.0 for PT1000
 #define RNOMINAL  1000.0
-#define PIN_ENABLE 7 //Heating enabled when this pin is low
+#define PIN_ENABLE 7 //Heating enabled when this pin is high
 #define PIN_SSR 5   //High when SSR is activated
 #define PIN_TEMP A5
 float aerror[20]; // 2 point should be enough
@@ -126,11 +126,12 @@ void loop() {
   Serial.print(" / derror : ");Serial.print(Kd*derror);
   Serial.print(" / error : ");Serial.print(error);
   Serial.println();
-  if(Kp*error + Kd*derror + Ki*ierror > 0 ){
+  if(Kp*error + Kd*derror + Ki*ierror > 0 && digitalRead(PIN_ENABLE)){
     digitalWrite(PIN_SSR,HIGH);
     //Serial.println("SSR is active, door being heated");
   }
   else{digitalWrite(PIN_SSR,LOW);
+  Serial.println("Temp control  not activated");
   }
   delay(20); //Wait 50 ms to be sure that the SSR was activated or deactivated
 }
