@@ -13,7 +13,8 @@
   Written by Limor Fried/Ladyada for Adafruit Industries.  
   BSD license, all text above must be included in any redistribution
  ****************************************************/
-// TODO add control pin to enable/disable the heating
+// Implemented on Arduino Nano
+//
 #include <Adafruit_MAX31865.h>
 
 // Use software SPI: CS, DI, DO, CLK
@@ -28,7 +29,7 @@ Adafruit_MAX31865 thermo = Adafruit_MAX31865(9, 10, 11, 12);
 #define RNOMINAL  1000.0
 #define PIN_ENABLE 7 //Heating enabled when this pin is high
 #define PIN_SSR 5   //High when SSR is activated
-#define PIN_TEMP A5
+#define PIN_TEMP 6 //Return the analog value of the temperature of the door
 float aerror[20]; // 2 point should be enough
 float ainterval[20];
 float temp = 0;
@@ -54,6 +55,8 @@ void setup() {
   pinMode(PIN_ENABLE,INPUT); //Pin controlled by the ME4 to enable heating
   pinMode(PIN_TEMP,OUTPUT); //Pin to output temp to the ME4
   thermo.begin(MAX31865_4WIRE);  // set to 2WIRE or 4WIRE as necessary
+
+  //analogWrite(PIN_TEMP,128);
 }
 
 
@@ -97,7 +100,7 @@ void loop() {
   }
   //Serial.println();
 
-  analogWrite(PIN_TEMP,int(ceil((temp-20)*255/30))); //Between 20 and 50 C
+  analogWrite(PIN_TEMP,int(ceil((temp-12.5)*255/30))); //Between 12.5 and 42.5 C -> 3.4V when not plugged by USB at 37.5
   if(k<20){
     aerror[k] = error; //array_error °C
     ainterval[k] = interval; //array_interval ms
