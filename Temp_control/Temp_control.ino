@@ -45,7 +45,7 @@ bool heating_enable = true;
 float Kp = 1.0;
 float Kd = 150.0; //PID parameters to be tuned
 float Ki = 0.01;
-float setpoint = 37;
+float setpoint = 38;
 
 
 void setup() {
